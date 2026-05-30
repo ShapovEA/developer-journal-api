@@ -6,3 +6,38 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum MeasurementUnit {
+  M
+  SQM
+  CBM
+  PCS
+}
+
+model ConstructionJournal {
+  id          String   @id @default(uuid()) @db.Uuid
+  workTypeId  String   @db.Uuid
+  workType    WorkType @relation(fields: [workTypeId], references: [id])
+  completedAt DateTime @default(now()) @db.Date
+  volume      Decimal  @db.Decimal(12, 2)
+  employeeId  String   @db.Uuid
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([completedAt])
+}
+
+model WorkType {
+  id                   String                @id @default(uuid()) @db.Uuid
+  name                 String                @unique
+  unit                 MeasurementUnit
+  constructionJournals ConstructionJournal[]
+}
+
+model Employee {
+  id                   String                @id @default(uuid()) @db.Uuid
+  firstName            String
+  middleName           String?
+  lastName             String
+  constructionJournals ConstructionJournal[]
+}
