@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { DalModule } from './dal/dal.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConstructionJournalModule } from './construction-journal/construction-journal.module';
+import { EmployeeModule } from './employee/employee.module';
 import { WorkTypeModule } from './work-type/work-type.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { WorkTypeModule } from './work-type/work-type.module';
     PrismaModule,
     DalModule,
     ConstructionJournalModule,
+    EmployeeModule,
     WorkTypeModule,
   ],
   controllers: [AppController],
