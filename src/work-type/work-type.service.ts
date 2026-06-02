@@ -1,9 +1,5 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
+import { throwPrismaError } from '../common/prisma-error.helper';
 import { WorkTypeDal } from '../dal/work-type/work-type.dal';
 import { CreateWorkTypeDto } from './dto/create-work-type.dto';
 import { UpdateWorkTypeDto } from './dto/update-work-type.dto';
@@ -18,29 +14,37 @@ export class WorkTypeService {
     });
   }
 
-  create(dto: CreateWorkTypeDto) {
-    return this.handleUniqueName(() =>
-      this.workTypeDal.create({
+  async create(dto: CreateWorkTypeDto) {
+    try {
+      return await this.workTypeDal.create({
         data: {
           name: dto.name.trim(),
           unit: dto.unit,
         },
-      }),
-    );
+      });
+    } catch (error) {
+      throwPrismaError(error, {
+        P2002: 'Такой тип работы уже существует',
+      });
+    }
   }
 
   async update(id: string, dto: UpdateWorkTypeDto) {
     await this.ensureExists(id);
 
-    return this.handleUniqueName(() =>
-      this.workTypeDal.update({
+    try {
+      return await this.workTypeDal.update({
         where: { id },
         data: {
           name: dto.name?.trim(),
           unit: dto.unit,
         },
-      }),
-    );
+      });
+    } catch (error) {
+      throwPrismaError(error, {
+        P2002: 'Такой тип работы уже существует',
+      });
+    }
   }
 
   async remove(id: string) {
@@ -49,36 +53,16 @@ export class WorkTypeService {
     try {
       return await this.workTypeDal.delete({ where: { id } });
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2003'
-      ) {
-        throw new ConflictException(
-          'Невозможно удалить: вид работ используется в журнале',
-        );
-      }
-      throw error;
+      throwPrismaError(error, {
+        P2003: 'Невозможно удалить тип работы: он используется в журналах работ',
+      });
     }
   }
 
   private async ensureExists(id: string) {
     const workType = await this.workTypeDal.findUnique({ where: { id } });
     if (!workType) {
-      throw new NotFoundException('Вид работ не найден');
-    }
-  }
-
-  private async handleUniqueName<T>(action: () => Promise<T>): Promise<T> {
-    try {
-      return await action();
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException('Вид работ с таким названием уже существует');
-      }
-      throw error;
+      throw new NotFoundException('Тип работы не найден');
     }
   }
 }
