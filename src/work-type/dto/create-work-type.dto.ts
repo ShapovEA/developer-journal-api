@@ -1,11 +1,12 @@
-import { MeasurementUnit } from '@prisma/client';
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+
+const measurementUnits = ['M', 'SQM', 'CBM', 'PCS'] as const;
 
 export class CreateWorkTypeDto {
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsEnum(MeasurementUnit)
-  unit: MeasurementUnit;
+  @IsIn(measurementUnits)
+  unit: (typeof measurementUnits)[number];
 }
